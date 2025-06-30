@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Upcoming Contest Calendar</title>
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #eef2f7;
+      margin: 0;
+      padding: 2rem;
+    }
+
+    h2 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 1rem;
+    }
+
+    #calendar {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      min-height: 600px;
+    }
+
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 999;
+      padding-top: 100px;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.4);
+    }
+
+    .modal-content {
+      background-color: #fff;
+      margin: auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 90%;
+      max-width: 500px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .close:hover {
+      color: #000;
+    }
+
+    .contest-entry {
+      margin: 10px 0;
+      padding: 10px;
+      background: #e3f2fd;
+      border-left: 4px solid #2196f3;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <h2>📅 Upcoming Codeforces Contests</h2>
+  <div id="calendar"></div>
+
+  <!-- Modal for contest details -->
+  <div id="contestModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h3>Contests on Selected Date</h3>
+      <div id="contestDetails"></div>
+    </div>
+  </div>
+
+  <script>
+    let allEvents = [];
+
+    async function loadCalendar() {
+      try {
+        const res = await fetch('/api/user/contests/upcoming');
+        const { contests } = await res.json();
+
+        allEvents = contests.map(c => ({
+          title: `🟢 ${c.name}`,
+          start: new Date(c.startTime).toISOString(),
+          dateStr: new Date(c.startTime).toISOString().split("T")[0],
+          extendedProps: {
+            name: c.name,
+            startTime: new Date(c.startTime).toLocaleString()
+          },
+          color: 'green'
+        }));
+
+        const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+          initialView: 'dayGridMonth',
+          events: allEvents,
+          height: 'auto',
+          dateClick: function(info) {
+            const clickedDate = info.dateStr;
+            const contestsOnDate = allEvents.filter(e => e.dateStr === clickedDate);
+
+            const modal = document.getElementById('contestModal');
+            const contestDetails = document.getElementById('contestDetails');
+            contestDetails.innerHTML = '';
+
+            if (contestsOnDate.length > 0) {
+              contestsOnDate.forEach(contest => {
+                const div = document.createElement('div');
+                div.className = 'contest-entry';
+                div.innerHTML = `<strong>${contest.extendedProps.name}</strong><br><span>🕓 ${contest.extendedProps.startTime}</span>`;
+                contestDetails.appendChild(div);
+              });
+            } else {
+              contestDetails.innerHTML = '<p>No contests on this date.</p>';
+            }
+
+            modal.style.display = 'block';
+          }
+        });
+
+        calendar.render();
+      } catch (err) {
+        console.error('Error loading calendar:', err);
+        document.getElementById('calendar').innerText = '⚠️ Failed to load contests.';
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', loadCalendar);
+
+    // Modal close handler
+    window.onclick = function(event) {
+      const modal = document.getElementById('contestModal');
+      if (event.target == modal) {
+        modal.style.display = 'none';
+      }
+    }
+
+    document.querySelector('.close').onclick = function () {
+      document.getElementById('contestModal').style.display = 'none';
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>🏆 Codeforces Leaderboard</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f5f7fb;
+      padding: 30px;
+      color: #333;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 28px;
+    }
+    table {
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+      border-collapse: collapse;
+      background: white;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    thead {
+      background-color: #007bff;
+      color: white;
+    }
+    th, td {
+      padding: 14px 16px;
+      text-align: center;
+    }
+    tbody tr:nth-child(even) {
+      background-color: #f0f4f8;
+    }
+    tbody tr:hover {
+      background-color: #e2e6ea;
+    }
+    a {
+      color: #007bff;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <h2>🏆 Codeforces Leaderboard</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Handle</th>
+        <th>Max Rating</th>
+        <th>Contests</th>
+      </tr>
+    </thead>
+    <tbody id="lb">
+      <tr><td colspan="4">Loading...</td></tr>
+    </tbody>
+  </table>
+
+  <script>
+    async function loadLeaderboard() {
+      try {
+        const res = await fetch('/api/user/leaderboard');
+        const { leaderboard } = await res.json(); // extract correct field
+        const tbody = document.getElementById('lb');
+
+        if (!Array.isArray(leaderboard) || leaderboard.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4">No data found.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = leaderboard.map((u, i) => `
+          <tr>
+            <td>${i + 1}</td>
+            <td><a href="/u/${u.handle}">${u.handle}</a></td>
+            <td>${u.maxRating}</td>
+            <td>${u.contests}</td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        document.getElementById('lb').innerHTML = '<tr><td colspan="4">⚠️ Failed to load leaderboard.</td></tr>';
+        console.error('Leaderboard load error:', err);
+      }
+    }
+
+    loadLeaderboard();
+  </script>
+</body>
+</html>

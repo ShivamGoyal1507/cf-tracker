@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>📊 Codeforces Rating Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f5f7fb;
+      padding: 30px;
+      color: #333;
+    }
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+    }
+    input {
+      width: 200px;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      padding: 10px 16px;
+    }
+    #error {
+      color: red;
+      margin-top: 10px;
+    }
+    .dashboard {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+    .chart-container {
+      flex: 1;
+      background: white;
+      padding: 16px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      min-width: 300px;
+    }
+    canvas {
+      max-width: 100%;
+      height: 300px !important;
+    }
+    h1 {
+      font-size: 26px;
+    }
+    h2 {
+      font-size: 18px;
+      margin-top: 10px;
+      text-align: center;
+    }
+    .summary {
+      margin-top: 10px;
+      background: #e9ecef;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h1>📊 Codeforces Rating Dashboard</h1>
+
+  <input id="handle1" placeholder="Enter handle (required)" />
+  <input id="handle2" placeholder="Enter second handle (optional)" />
+  <button onclick="loadComparison()">Load</button>
+  <div id="error"></div>
+
+  <div class="dashboard" id="dashboard">
+    <div class="chart-container" id="user1-container">
+      <h2 id="title1">User 1</h2>
+      <canvas id="chart1"></canvas>
+      <div class="summary" id="summary1"></div>
+    </div>
+
+    <div class="chart-container" id="user2-container" style="display:none;">
+      <h2 id="title2">User 2</h2>
+      <canvas id="chart2"></canvas>
+      <div class="summary" id="summary2"></div>
+    </div>
+  </div>
+
+  <script>
+    let chart1, chart2;
+
+    async function loadUser(handle, chartId, titleId, summaryId) {
+      const res = await fetch(`/api/user/${handle}/stats`);
+      const data = await res.json();
+
+      const timeline = data.ratingTimeline;
+      const dates = timeline.map(d => new Date(d.date).toLocaleDateString());
+      const ratings = timeline.map(d => d.rating);
+
+      const start = ratings[0];
+      const end = ratings[ratings.length - 1];
+      const diff = end - start;
+
+      document.getElementById(titleId).textContent = `📈 ${handle}`;
+      document.getElementById(summaryId).innerHTML = `
+        <strong>Start Rating:</strong> ${start} <br />
+        <strong>End Rating:</strong> ${end} <br />
+        <strong>Change:</strong> ${diff >= 0 ? '+' + diff : diff}
+      `;
+
+      const ctx = document.getElementById(chartId);
+      const existingChart = chartId === 'chart1' ? chart1 : chart2;
+      if (existingChart) existingChart.destroy();
+
+      const newChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [{
+            label: `Rating of ${handle}`,
+            data: ratings,
+            borderColor: '#007bff',
+            backgroundColor: 'rgba(0,123,255,0.1)',
+            tension: 0.3,
+            pointRadius: 3,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: false,
+              title: { display: true, text: 'Rating' }
+            },
+            x: {
+              title: { display: true, text: 'Date' }
+            }
+          }
+        }
+      });
+
+      if (chartId === 'chart1') chart1 = newChart;
+      else chart2 = newChart;
+    }
+
+    async function loadComparison() {
+      const handle1 = document.getElementById('handle1').value.trim();
+      const handle2 = document.getElementById('handle2').value.trim();
+      const errorBox = document.getElementById('error');
+      errorBox.textContent = '';
+
+      if (!handle1) {
+        errorBox.textContent = '❗ Please enter at least one handle.';
+        return;
+      }
+
+      try {
+        await fetch('/api/user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ handle: handle1 })
+        });
+        await loadUser(handle1, 'chart1', 'title1', 'summary1');
+
+        if (handle2) {
+          document.getElementById('user2-container').style.display = 'block';
+          await fetch('/api/user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ handle: handle2 })
+          });
+          await loadUser(handle2, 'chart2', 'title2', 'summary2');
+        } else {
+          document.getElementById('user2-container').style.display = 'none';
+          if (chart2) {
+            chart2.destroy();
+            chart2 = null;
+          }
+        }
+
+      } catch (err) {
+        console.error(err);
+        errorBox.textContent = '❌ Failed to fetch data or render chart.';
+      }
+    }
+  </script>
+</body>
+</html>
