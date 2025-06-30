@@ -1,103 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Tag Frequency Comparison</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      margin: 40px;
-      background-color: #f9f9f9;
-      color: #333;
-    }
-
-    h2 {
-      color: #444;
-    }
-
-    input {
-      padding: 10px;
-      margin: 10px 5px 10px 0;
-      width: 200px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
-
-    button {
-      padding: 10px 18px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    button:hover {
-      background-color: #0056b3;
-    }
-
-    table {
-      border-collapse: collapse;
-      margin-top: 30px;
-      width: 100%;
-      background-color: white;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-
-    th, td {
-      padding: 12px;
-      text-align: center;
-      border-bottom: 1px solid #ddd;
-    }
-
-    th {
-      background-color: #f0f0f0;
-      font-weight: bold;
-    }
-
-    tr:hover {
-      background-color: #f1f9ff;
-    }
-
-    .highlight {
-      background-color: #e6ffe6;
-      font-weight: bold;
-    }
-
-    .loading {
-      margin-top: 20px;
-      font-style: italic;
-      color: #888;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <h2>🧠 Tag Frequency Comparison</h2>
+<body class="bg-gray-100 text-gray-800 font-sans min-h-screen p-4 sm:p-8">
 
-  <input id="handle1" list="handleSuggestions1" placeholder="Enter Handle 1" />
-  <datalist id="handleSuggestions1"></datalist>
+  <div class="max-w-4xl mx-auto bg-white p-6 sm:p-10 rounded-xl shadow-lg">
+    <h2 class="text-2xl sm:text-3xl font-bold text-blue-600 mb-6 flex items-center gap-2">
+      🧠 Tag Frequency Comparison
+    </h2>
 
-  <input id="handle2" list="handleSuggestions2" placeholder="Enter Handle 2" />
-  <datalist id="handleSuggestions2"></datalist>
+    <div class="flex flex-col sm:flex-row gap-4 mb-4">
+      <input id="handle1" list="handleSuggestions1" placeholder="Enter Handle 1"
+        class="w-full sm:w-1/2 px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      <datalist id="handleSuggestions1"></datalist>
 
-  <button onclick="compareTags()">Compare</button>
+      <input id="handle2" list="handleSuggestions2" placeholder="Enter Handle 2"
+        class="w-full sm:w-1/2 px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      <datalist id="handleSuggestions2"></datalist>
+    </div>
 
-  <div id="loading" class="loading" style="display: none;">Loading tag data...</div>
+    <button onclick="compareTags()"
+      class="bg-blue-600 text-white px-6 py-3 rounded-md font-semibold hover:bg-blue-700 transition mb-6">
+      Compare
+    </button>
 
-  <table id="tagTable" style="display: none;">
-    <thead>
-      <tr>
-        <th>Tag</th>
-        <th>Handle 1</th>
-        <th>Handle 2</th>
-      </tr>
-    </thead>
-    <tbody id="tagTableBody"></tbody>
-  </table>
+    <div id="loading" class="italic text-gray-500 mb-4 hidden">Loading tag data...</div>
+
+    <div class="overflow-x-auto">
+      <table id="tagTable" class="w-full table-auto text-sm sm:text-base hidden">
+        <thead class="bg-gray-100 font-bold">
+          <tr>
+            <th class="p-3 border-b text-left">Tag</th>
+            <th class="p-3 border-b text-center">Handle 1</th>
+            <th class="p-3 border-b text-center">Handle 2</th>
+          </tr>
+        </thead>
+        <tbody id="tagTableBody"></tbody>
+      </table>
+    </div>
+  </div>
 
   <script>
-    // Fetch and build tag frequency map for a handle
     async function fetchTags(handle) {
       try {
         await fetch('/api/user', {
@@ -117,7 +64,6 @@
       }
     }
 
-    // Compare tags between two handles
     async function compareTags() {
       const handle1 = document.getElementById('handle1').value.trim();
       const handle2 = document.getElementById('handle2').value.trim();
@@ -130,8 +76,8 @@
         return;
       }
 
-      table.style.display = 'none';
-      loading.style.display = 'block';
+      table.classList.add('hidden');
+      loading.classList.remove('hidden');
       tbody.innerHTML = '';
 
       try {
@@ -147,32 +93,30 @@
           const count2 = tags2[tag] || 0;
 
           const row = document.createElement('tr');
+          row.className = "hover:bg-blue-50";
           row.innerHTML = `
-            <td>${tag}</td>
-            <td class="${count1 > count2 ? 'highlight' : ''}">${count1}</td>
-            <td class="${count2 > count1 ? 'highlight' : ''}">${count2}</td>
+            <td class="px-4 py-2 border-b text-left">${tag}</td>
+            <td class="px-4 py-2 border-b text-center ${count1 > count2 ? 'bg-green-100 font-semibold' : ''}">${count1}</td>
+            <td class="px-4 py-2 border-b text-center ${count2 > count1 ? 'bg-green-100 font-semibold' : ''}">${count2}</td>
           `;
           tbody.appendChild(row);
         });
 
-        table.style.display = 'table';
+        table.classList.remove('hidden');
       } catch (e) {
         console.error('Comparison failed', e);
       } finally {
-        loading.style.display = 'none';
+        loading.classList.add('hidden');
       }
     }
 
-    // Fetch handle suggestions from Trie via /search
     async function fetchHandleSuggestions(prefix, listId) {
       if (!prefix) return;
-
       try {
         const res = await fetch(`/search?prefix=${encodeURIComponent(prefix)}`);
         const suggestions = await res.json();
         const datalist = document.getElementById(listId);
         datalist.innerHTML = '';
-
         suggestions.forEach(handle => {
           const option = document.createElement('option');
           option.value = handle;
@@ -183,7 +127,6 @@
       }
     }
 
-    // Attach input listeners to handle fields
     function setupAutocomplete(inputId, listId) {
       const input = document.getElementById(inputId);
       input.addEventListener('input', () => {
@@ -192,7 +135,6 @@
       });
     }
 
-    // Initialize on DOM load
     document.addEventListener('DOMContentLoaded', () => {
       setupAutocomplete('handle1', 'handleSuggestions1');
       setupAutocomplete('handle2', 'handleSuggestions2');

@@ -3,90 +3,40 @@
 <head>
   <meta charset="UTF-8" />
   <title>📊 Codeforces Rating Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f5f7fb;
-      padding: 30px;
-      color: #333;
-    }
-    input, button {
-      padding: 10px;
-      font-size: 16px;
-    }
-    input {
-      width: 200px;
-      margin-right: 10px;
-      margin-bottom: 10px;
-    }
-    button {
-      background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-      padding: 10px 16px;
-    }
-    #error {
-      color: red;
-      margin-top: 10px;
-    }
-    .dashboard {
-      display: flex;
-      gap: 20px;
-      flex-wrap: wrap;
-      margin-top: 20px;
-    }
-    .chart-container {
-      flex: 1;
-      background: white;
-      padding: 16px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-      min-width: 300px;
-    }
-    canvas {
-      max-width: 100%;
-      height: 300px !important;
-    }
-    h1 {
-      font-size: 26px;
-    }
-    h2 {
-      font-size: 18px;
-      margin-top: 10px;
-      text-align: center;
-    }
-    .summary {
-      margin-top: 10px;
-      background: #e9ecef;
-      padding: 10px;
-      border-radius: 8px;
-      font-size: 14px;
-    }
-  </style>
 </head>
-<body>
-  <h1>📊 Codeforces Rating Dashboard</h1>
+<body class="bg-gray-100 min-h-screen text-gray-800 p-6 sm:p-10 font-sans">
 
-  <input id="handle1" placeholder="Enter handle (required)" />
-  <input id="handle2" placeholder="Enter second handle (optional)" />
-  <button onclick="loadComparison()">Load</button>
-  <div id="error"></div>
+  <div class="max-w-6xl mx-auto">
+    <h1 class="text-3xl font-bold mb-6 text-blue-700 flex items-center gap-2">📊 Codeforces Rating Dashboard</h1>
 
-  <div class="dashboard" id="dashboard">
-    <div class="chart-container" id="user1-container">
-      <h2 id="title1">User 1</h2>
-      <canvas id="chart1"></canvas>
-      <div class="summary" id="summary1"></div>
+    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
+      <input id="handle1" placeholder="Enter handle (required)"
+             class="px-4 py-3 border rounded-md w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      <input id="handle2" placeholder="Enter second handle (optional)"
+             class="px-4 py-3 border rounded-md w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      <button onclick="loadComparison()"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-md font-semibold transition">
+        Load
+      </button>
     </div>
 
-    <div class="chart-container" id="user2-container" style="display:none;">
-      <h2 id="title2">User 2</h2>
-      <canvas id="chart2"></canvas>
-      <div class="summary" id="summary2"></div>
+    <div id="error" class="text-red-600 mb-4"></div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="dashboard">
+      <div class="bg-white rounded-xl shadow-md p-5" id="user1-container">
+        <h2 id="title1" class="text-xl font-semibold text-center text-blue-600 mb-4">User 1</h2>
+        <canvas id="chart1" class="w-full h-64"></canvas>
+        <div id="summary1" class="mt-4 bg-gray-100 p-4 rounded-md text-sm"></div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-md p-5 hidden" id="user2-container">
+        <h2 id="title2" class="text-xl font-semibold text-center text-blue-600 mb-4">User 2</h2>
+        <canvas id="chart2" class="w-full h-64"></canvas>
+        <div id="summary2" class="mt-4 bg-gray-100 p-4 rounded-md text-sm"></div>
+      </div>
     </div>
   </div>
 
@@ -123,8 +73,8 @@
           datasets: [{
             label: `Rating of ${handle}`,
             data: ratings,
-            borderColor: '#007bff',
-            backgroundColor: 'rgba(0,123,255,0.1)',
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59,130,246,0.1)',
             tension: 0.3,
             pointRadius: 3,
             fill: true
@@ -168,7 +118,7 @@
         await loadUser(handle1, 'chart1', 'title1', 'summary1');
 
         if (handle2) {
-          document.getElementById('user2-container').style.display = 'block';
+          document.getElementById('user2-container').classList.remove('hidden');
           await fetch('/api/user', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -176,13 +126,12 @@
           });
           await loadUser(handle2, 'chart2', 'title2', 'summary2');
         } else {
-          document.getElementById('user2-container').style.display = 'none';
+          document.getElementById('user2-container').classList.add('hidden');
           if (chart2) {
             chart2.destroy();
             chart2 = null;
           }
         }
-
       } catch (err) {
         console.error(err);
         errorBox.textContent = '❌ Failed to fetch data or render chart.';
