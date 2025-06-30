@@ -22,10 +22,7 @@ mongoose.connect(process.env.MONGO_URI, {
 }).then(async () => {
   console.log('✅ MongoDB connected');
 
-  // Initialize Trie with existing users
-  const users = await User.find({}, 'handle');
-  users.forEach(user => insertIntoTrie(user.handle));
-  global.handleTrie = trie;
+ 
 
   setupCron();
 
