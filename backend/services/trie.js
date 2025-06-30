@@ -45,11 +45,4 @@ class Trie {
 const handles = ['tourist', 'tony_stark', 'thelegend27', 'testuser1', 'testuser2'];
 global.handleTrie = new Trie();
 handles.forEach(h => global.handleTrie.insert(h.toLowerCase()));
-
-// Then:
-router.get('/search', (req, res) => {
-  const prefix = req.query.prefix || '';
-  if (!prefix || !global.handleTrie) return res.json([]);
-  const matches = global.handleTrie.search(prefix.toLowerCase());
-  res.json(matches.slice(0, 10));
-});
+ 
